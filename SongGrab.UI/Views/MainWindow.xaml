@@ -1,0 +1,382 @@
+<Window x:Class="SongGrab.UI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:views="clr-namespace:SongGrab.UI.Views"
+        xmlns:local="clr-namespace:SongGrab.UI"
+        xmlns:vm="clr-namespace:SongGrab.UI.ViewModels"
+        xmlns:converters="clr-namespace:SongGrab.UI.Converters"
+        mc:Ignorable="d"
+        Title="SongGrab" Height="720" Width="1280"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignBackground}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        RenderOptions.BitmapScalingMode="HighQuality"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <converters:ProgressVisibilityConverter x:Key="ProgressVisibilityConverter"/>
+        <converters:StatusBrushConverter x:Key="StatusBrushConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+
+    <materialDesign:DialogHost Identifier="RootDialog">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Barre d'outils supérieure -->
+            <materialDesign:ColorZone Mode="PrimaryMid" Padding="8" materialDesign:ElevationAssist.Elevation="Dp2">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" Margin="4,0">
+                        <TextBox Width="300"
+                                Style="{StaticResource ModernTextBox}"
+                                materialDesign:HintAssist.Hint="ID Playlist Deezer"
+                                Text="{Binding PlaylistId, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Style="{StaticResource ModernButton}"
+                                Command="{Binding LoadPlaylistCommand}"
+                                Width="120">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="PlaylistMusic" Margin="0,0,8,0"/>
+                                <TextBlock Text="CHARGER"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="4,0">
+                        <Button Style="{StaticResource ModernButton}" 
+                                Command="{Binding SelectAllTracksCommand}"
+                                Width="200"
+                                ToolTip="Sélectionner toutes les pistes">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="SelectAll" Margin="0,0,8,0"/>
+                                <TextBlock Text="TOUT SÉLECTIONNER"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ModernButton}" 
+                                Command="{Binding DeselectAllTracksCommand}"
+                                Width="200"
+                                ToolTip="Désélectionner toutes les pistes">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="SelectOff" Margin="0,0,8,0"/>
+                                <TextBlock Text="TOUT DÉSÉLECTIONNER"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ModernButton}" 
+                                Command="{Binding SelectDownloadFolderCommand}"
+                                MinWidth="180"
+                                ToolTip="Choisir le dossier de destination">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Folder" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding DownloadPath}" MaxWidth="200" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ModernButton}"
+                                Command="{Binding OpenSettingsCommand}"
+                                Width="48"
+                                Margin="8,0,0,0"
+                                ToolTip="Paramètres">
+                            <materialDesign:PackIcon Kind="Settings" Width="24" Height="24"/>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </materialDesign:ColorZone>
+
+            <!-- Liste des pistes -->
+            <Grid Grid.Row="1" Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Barre de recherche -->
+                <Grid Margin="0,0,0,16" Width="300" HorizontalAlignment="Left">
+                    <TextBox Style="{StaticResource ModernTextBox}"
+                            materialDesign:HintAssist.Hint="Rechercher une piste..."
+                            Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <materialDesign:PackIcon Kind="Magnify"
+                                           Opacity="0.56"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                </Grid>
+
+                <!-- Liste -->
+                <ScrollViewer Grid.Row="1"
+                             UseLayoutRounding="True" 
+                             SnapsToDevicePixels="True">
+                    <ItemsControl ItemsSource="{Binding FilteredTracks}"
+                                UseLayoutRounding="True" 
+                                SnapsToDevicePixels="True">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card Background="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                   UniformCornerRadius="0"
+                                                   Margin="0,0,0,1"
+                                                   UseLayoutRounding="True"
+                                                   SnapsToDevicePixels="True"
+                                                   materialDesign:ElevationAssist.Elevation="Dp0"
+                                                   BorderThickness="0,0,0,1"
+                                                   BorderBrush="#DEDEDE">
+                                    <materialDesign:Card.Resources>
+                                        <Style TargetType="materialDesign:Card" BasedOn="{StaticResource ModernCard}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                    <Setter Property="Padding" Value="6,2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                    <Setter Property="Padding" Value="16,6"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:Card.Resources>
+                                    <Grid UseLayoutRounding="True" 
+                                          SnapsToDevicePixels="True">
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                        <Setter Property="Margin" Value="2,1"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox IsChecked="{Binding IsSelected}" 
+                                                 Style="{StaticResource MaterialDesignCheckBox}"
+                                                 Margin="0,0,16,0"/>
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                            <TextBlock Text="{Binding Title}">
+                                                <TextBlock.Resources>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource ModernHeader}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                <Setter Property="FontSize" Value="13"/>
+                                                                <Setter Property="Margin" Value="0,0,0,1"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                <Setter Property="FontSize" Value="16"/>
+                                                                <Setter Property="Margin" Value="0,0,0,2"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Resources>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Artist}">
+                                                <TextBlock.Resources>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource ModernSubheader}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                <Setter Property="FontSize" Value="11"/>
+                                                                <Setter Property="Margin" Value="0,0,0,1"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                <Setter Property="FontSize" Value="14"/>
+                                                                <Setter Property="Margin" Value="0,0,0,2"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Resources>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Album}">
+                                                <TextBlock.Resources>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource ModernSubheader}">
+                                                        <Setter Property="Opacity" Value="0.6"/>
+                                                        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+                                                        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                <Setter Property="FontSize" Value="11"/>
+                                                                <Setter Property="Margin" Value="0,0,0,2"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                <Setter Property="FontSize" Value="12"/>
+                                                                <Setter Property="Margin" Value="0,0,0,4"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Resources>
+                                            </TextBlock>
+                                            <Grid Margin="0,4,0,0">
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                <Setter Property="Margin" Value="0,2,0,0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <ProgressBar Value="{Binding DownloadProgress, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                           Height="2"
+                                                           Margin="0,1"
+                                                           Foreground="#4CAF50"
+                                                           Visibility="{Binding DownloadProgress, Converter={StaticResource ProgressVisibilityConverter}}"
+                                                           UseLayoutRounding="True"
+                                                           SnapsToDevicePixels="True">
+                                                    <ProgressBar.Resources>
+                                                        <Style TargetType="ProgressBar" BasedOn="{StaticResource ModernProgressBar}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                    <Setter Property="Height" Value="2"/>
+                                                                    <Setter Property="Margin" Value="0,1"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                    <Setter Property="Height" Value="4"/>
+                                                                    <Setter Property="Margin" Value="0,2"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ProgressBar.Resources>
+                                                </ProgressBar>
+                                                <StackPanel Grid.Row="1" 
+                                                          Orientation="Horizontal">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                    <Setter Property="Margin" Value="0,2,0,0"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                    <Setter Property="Margin" Value="0,4,0,0"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+                                                    <materialDesign:PackIcon Kind="Download">
+                                                        <materialDesign:PackIcon.Style>
+                                                            <Style TargetType="materialDesign:PackIcon">
+                                                                <Setter Property="Foreground" Value="#4CAF50"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                        <Setter Property="Width" Value="12"/>
+                                                                        <Setter Property="Height" Value="12"/>
+                                                                        <Setter Property="Margin" Value="0,0,4,0"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                        <Setter Property="Width" Value="16"/>
+                                                                        <Setter Property="Height" Value="16"/>
+                                                                        <Setter Property="Margin" Value="0,0,8,0"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </materialDesign:PackIcon.Style>
+                                                    </materialDesign:PackIcon>
+                                                    <TextBlock Text="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
+                                                             Foreground="#4CAF50"
+                                                             VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                        <Setter Property="FontSize" Value="11"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                        <Setter Property="FontSize" Value="12"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding DownloadProgress, StringFormat={}{0:0}%, UpdateSourceTrigger=PropertyChanged}"
+                                                             Foreground="#4CAF50"
+                                                             VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                        <Setter Property="FontSize" Value="11"/>
+                                                                        <Setter Property="Margin" Value="4,0,0,0"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                                                        <Setter Property="FontSize" Value="12"/>
+                                                                        <Setter Property="Margin" Value="8,0,0,0"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" 
+                                                 Text="{Binding Duration}" 
+                                                 Style="{StaticResource ModernSubheader}"
+                                                 Margin="0"
+                                                 TextOptions.TextFormattingMode="Ideal"
+                                                 TextOptions.TextRenderingMode="ClearType"/>
+                                    </Grid>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Barre d'état -->
+            <materialDesign:ColorZone Mode="PrimaryLight" Grid.Row="2" materialDesign:ElevationAssist.Elevation="Dp4">
+                <DockPanel Margin="16">
+                    <StackPanel Orientation="Horizontal">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                    Value="0"
+                                    IsIndeterminate="True"
+                                    Width="20"
+                                    Height="20"
+                                    Margin="0,0,8,0"
+                                    Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="{Binding StatusMessage}" 
+                                 Style="{StaticResource ModernSubheader}"
+                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource ModernOutlinedButton}"
+                                Command="{Binding OpenDonationCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Heart" Margin="0,0,8,0"/>
+                                <TextBlock Text="FAIRE UN DON"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource ModernButton}"
+                                Command="{Binding DownloadSelectedTracksCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Download" Margin="0,0,8,0"/>
+                                <TextBlock Text="TÉLÉCHARGER LA SÉLECTION"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </materialDesign:ColorZone>
+        </Grid>
+    </materialDesign:DialogHost>
+</Window> 

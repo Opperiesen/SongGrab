@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl x:Class="SongGrab.UI.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:SongGrab.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
+    <StackPanel Margin="24">
+        <!-- Titre -->
+        <TextBlock Text="PARAMÈTRES"
+                  Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                  Margin="0,0,0,24"/>
+
+        <!-- Interface -->
+        <TextBlock Text="INTERFACE"
+                  Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                  Margin="0,0,0,16"/>
+        <StackPanel Margin="0,0,0,24">
+            <CheckBox Content="Mode compact (plus de pistes à l'écran)"
+                     IsChecked="{Binding CompactMode}"
+                     Style="{StaticResource MaterialDesignCheckBox}"/>
+        </StackPanel>
+
+        <!-- Téléchargement -->
+        <TextBlock Text="TÉLÉCHARGEMENT"
+                  Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                  Margin="0,0,0,16"/>
+        <StackPanel Margin="0,0,0,24">
+            <CheckBox Content="Créer un dossier par playlist"
+                     IsChecked="{Binding CreatePlaylistFolder}"
+                     Style="{StaticResource MaterialDesignCheckBox}"/>
+            <CheckBox Content="Vérifier l'intégrité des fichiers après téléchargement"
+                     IsChecked="{Binding VerifyDownloads}"
+                     Style="{StaticResource MaterialDesignCheckBox}"
+                     Margin="0,8,0,0"/>
+            
+            <!-- Format du nom de fichier -->
+            <TextBlock Text="Format du nom de fichier"
+                      Style="{StaticResource MaterialDesignBody1TextBlock}"
+                      Margin="0,16,0,8"/>
+            <ComboBox ItemsSource="{Binding FileNameTemplates}"
+                     SelectedItem="{Binding SelectedFileNameTemplate}"
+                     Style="{StaticResource MaterialDesignComboBox}"
+                     materialDesign:HintAssist.Hint="Sélectionnez un format"
+                     Width="300"
+                     HorizontalAlignment="Left"/>
+            
+            <!-- Qualité audio -->
+            <TextBlock Text="Qualité audio"
+                      Style="{StaticResource MaterialDesignBody1TextBlock}"
+                      Margin="0,16,0,8"/>
+            <ComboBox ItemsSource="{Binding AudioQualities}"
+                     SelectedItem="{Binding SelectedAudioQuality}"
+                     Style="{StaticResource MaterialDesignComboBox}"
+                     materialDesign:HintAssist.Hint="Sélectionnez une qualité"
+                     Width="200"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Mises à jour -->
+        <TextBlock Text="MISES À JOUR"
+                  Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                  Margin="0,0,0,16"/>
+        <StackPanel Margin="0,0,0,24">
+            <CheckBox Content="Vérifier les mises à jour au démarrage"
+                     IsChecked="{Binding CheckForUpdatesAtStartup}"
+                     Style="{StaticResource MaterialDesignCheckBox}"/>
+            <Button Style="{StaticResource ModernButton}"
+                    Command="{Binding CheckForUpdatesCommand}"
+                    HorizontalAlignment="Left"
+                    Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Update" Margin="0,0,8,0"/>
+                    <TextBlock Text="VÉRIFIER LES MISES À JOUR"/>
+                </StackPanel>
+            </Button>
+            <TextBlock Text="{Binding UpdateStatus}"
+                      Style="{StaticResource MaterialDesignBody1TextBlock}"
+                      Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- À propos -->
+        <TextBlock Text="À PROPOS"
+                  Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                  Margin="0,0,0,16"/>
+        <StackPanel Margin="0,0,0,24">
+            <TextBlock Text="{Binding Version, StringFormat=Version {0}}"
+                      Style="{StaticResource MaterialDesignBody1TextBlock}"/>
+            <TextBlock Margin="0,8,0,0">
+                <Hyperlink Command="{Binding OpenDonationCommand}">
+                    <TextBlock Text="Faire un don"/>
+                </Hyperlink>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- Boutons de validation -->
+        <Grid Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding CancelCommand}"
+                    Margin="0,0,8,0"
+                    Width="120">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Close" Margin="0,0,8,0"/>
+                    <TextBlock Text="ANNULER"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="2"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Command="{Binding SaveCommand}"
+                    Width="120">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
+                    <TextBlock Text="VALIDER"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+    </StackPanel>
+</UserControl> 
